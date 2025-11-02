@@ -1,0 +1,132 @@
+Replit AI Project Prompt (Copy-Paste This)
+
+/generate
+Build a complete full-stack career guidance and mentorship web application using Next.js (TypeScript) + Tailwind CSS + Prisma + PostgreSQL + NextAuth.js + Stripe Checkout, optimized to run efficiently on Replit’s free tier with minimal compute usage. The goal is to create a professional yet resource-light platform where a client can sell career guidance or mentorship courses (both recorded and live), users can browse and buy courses securely, and students can track lesson progress.
+
+🧩 Structure the project as follows:
+
+/app — main Next.js App Router with routes for /, /courses, /courses/[slug], /dashboard, /admin, and /api.
+
+/components — reusable React components (Navbar, Footer, CourseCard, DashboardLayout, ProgressBar, TestimonialCard, etc.).
+
+/lib — helper functions for Stripe, Auth, and future AI integrations.
+
+/prisma — Prisma schema and seed data.
+
+/styles — global Tailwind and layout styles.
+
+⚙️ Setup details:
+
+Initialize a Next.js + TypeScript app.
+
+Add Tailwind CSS with a clean “modern-classic” theme (Playfair Display for headings, Inter for body).
+
+Configure Prisma ORM with PostgreSQL (connect to a free Neon.tech or Supabase DB).
+
+Set up NextAuth.js for authentication (email/password + Google).
+
+Add Stripe Checkout for course purchases (store webhooks and enrollment updates in DB).
+
+Store videos as external links (Cloudflare Stream, Vimeo, or YouTube unlisted) to save Replit bandwidth.
+
+🧠 Core Features:
+
+Public Pages:
+
+Home (/) with hero banner, featured courses, testimonials, and mentor bios.
+
+Courses page (/courses) with filtering and search.
+
+Course detail page (/courses/[slug]) showing syllabus, pricing, instructor info, and a “Buy Now” button.
+
+Auth & Enrollment:
+
+Users can sign up/login and enroll in courses via Stripe Checkout.
+
+Stripe webhook endpoint (/api/webhook) validates payment and creates an enrollment record.
+
+Student Dashboard (/dashboard):
+
+Lists purchased courses and tracks lesson completion.
+
+Displays a progress bar and “Mark as Complete” buttons per lesson.
+
+Admin Panel (/admin):
+
+Allows admin to create/edit courses and upload lesson video URLs.
+
+Displays total enrollments and sales summary.
+
+💾 Database Models (Prisma):
+
+User → id, name, email, password, role (student/admin)
+
+Course → id, title, slug, description, price, category, instructorId, published
+
+Lesson → id, courseId, title, videoUrl, orderIndex, duration
+
+Enrollment → id, userId, courseId, purchasedAt
+
+Progress → id, userId, lessonId, completed
+
+🎨 UI Design:
+
+Use a clean, timeless design — white background, elegant typography, and soft color palette.
+
+Responsive layouts for desktop, tablet, and mobile.
+
+Add trust-building elements: mentor credentials, secure payment badges, student testimonials, and a contact form.
+
+🚀 Performance & Scalability:
+
+Enable SSR for SEO and faster load times.
+
+Cache course lists in memory.
+
+Lazy-load videos and images.
+
+Keep functions modular for future scaling (e.g., separate Stripe and Auth logic in /lib).
+
+🧠 AI Integration (prepare but don’t implement yet):
+
+Create placeholders for an “AI Career Coach” chat feature (/api/ai/coach) using OpenAI or Gemini API.
+
+Comment clearly where AI integrations would go later.
+
+🧰 Developer Setup:
+
+Add ESLint + Prettier for formatting.
+
+Include .env.local.example for environment variables (DATABASE_URL, STRIPE_SECRET_KEY, NEXTAUTH_SECRET, etc.).
+
+Add npm run dev, npm run build, and npm run deploy scripts.
+
+Seed the DB with sample data (one instructor, two demo courses, a few lessons).
+
+🌐 Deployment:
+
+Make it runnable directly on Replit using npm run dev.
+
+Include a README with setup + deploy steps (to Vercel or Supabase).
+
+Use free services only — no paid APIs or heavy compute.
+
+🧩 Future Features (comment placeholders):
+
+Mentorship booking system with Google Calendar.
+
+Discussion forums.
+
+AI-based skill assessments and personalized recommendations.
+
+Certificates of completion.
+
+✅ Final Deliverable:
+
+A single Replit project folder containing a ready-to-run Next.js full-stack web app.
+
+Clean, modular, well-commented code.
+
+Fully functional auth, course purchase, and progress tracking.
+
+Works on Replit free tier and deployable to Vercel instantly.
