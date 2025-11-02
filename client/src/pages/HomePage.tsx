@@ -109,35 +109,38 @@ export default function HomePage() {
       <Navbar />
       <Hero />
 
-      <section className="py-12 border-y border-border bg-muted/30">
+      <section className="py-12 border-y border-border bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5">
         <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-20">
           <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12">
-            <div className="text-center">
-              <p className="text-3xl md:text-4xl font-bold text-foreground" data-testid="text-stat-students">5,000+</p>
+            <div className="text-center animate-fade-in">
+              <p className="text-3xl md:text-4xl font-bold gradient-text" data-testid="text-stat-students">5,000+</p>
               <p className="text-sm text-muted-foreground mt-1">Active Students</p>
             </div>
-            <div className="text-center">
-              <p className="text-3xl md:text-4xl font-bold text-foreground" data-testid="text-stat-courses">50+</p>
+            <div className="text-center animate-fade-in" style={{animationDelay: '0.1s'}}>
+              <p className="text-3xl md:text-4xl font-bold gradient-text" data-testid="text-stat-courses">50+</p>
               <p className="text-sm text-muted-foreground mt-1">Expert Courses</p>
             </div>
-            <div className="text-center">
-              <p className="text-3xl md:text-4xl font-bold text-foreground" data-testid="text-stat-mentors">15+</p>
+            <div className="text-center animate-fade-in" style={{animationDelay: '0.2s'}}>
+              <p className="text-3xl md:text-4xl font-bold gradient-text" data-testid="text-stat-mentors">15+</p>
               <p className="text-sm text-muted-foreground mt-1">Industry Mentors</p>
             </div>
-            <div className="text-center">
-              <p className="text-3xl md:text-4xl font-bold text-foreground" data-testid="text-stat-satisfaction">98%</p>
+            <div className="text-center animate-fade-in" style={{animationDelay: '0.3s'}}>
+              <p className="text-3xl md:text-4xl font-bold gradient-text" data-testid="text-stat-satisfaction">98%</p>
               <p className="text-sm text-muted-foreground mt-1">Satisfaction Rate</p>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="py-16 md:py-24">
-        <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-20">
-          <div className="text-center mb-12">
-            <Badge className="mb-4" data-testid="badge-featured">FEATURED COURSES</Badge>
-            <h2 className="text-3xl md:text-4xl font-heading font-semibold text-foreground mb-4" data-testid="text-featured-title">
-              Start Your Learning Journey
+      <section className="py-16 md:py-24 relative overflow-hidden">
+        <div className="absolute top-20 right-0 w-72 h-72 bg-primary/10 rounded-full filter blur-3xl"></div>
+        <div className="absolute bottom-20 left-0 w-72 h-72 bg-accent/10 rounded-full filter blur-3xl"></div>
+
+        <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-20 relative z-10">
+          <div className="text-center mb-12 animate-slide-up">
+            <Badge className="mb-4 gradient-primary shadow-md" data-testid="badge-featured">FEATURED COURSES</Badge>
+            <h2 className="text-3xl md:text-4xl font-heading font-semibold mb-4" data-testid="text-featured-title">
+              Start Your <span className="gradient-text">Learning Journey</span>
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Explore our most popular courses designed by industry experts to accelerate your career growth.
@@ -151,11 +154,11 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="py-16 md:py-24 bg-muted/30">
+      <section className="py-16 md:py-24 bg-gradient-to-b from-muted/30 to-background">
         <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-20">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-heading font-semibold text-foreground mb-4" data-testid="text-features-title">
-              Why Choose CareerPath Academy
+          <div className="text-center mb-12 animate-slide-up">
+            <h2 className="text-3xl md:text-4xl font-heading font-semibold mb-4" data-testid="text-features-title">
+              Why Choose <span className="gradient-text">CareerPath Academy</span>
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               We provide everything you need to succeed in your career journey.
@@ -163,11 +166,11 @@ export default function HomePage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {features.map((feature, index) => (
-              <div key={index} className="text-center space-y-4" data-testid={`feature-${index}`}>
-                <div className="mx-auto w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center">
-                  <feature.icon className="h-8 w-8 text-primary" />
+              <div key={index} className="text-center space-y-4 group animate-scale-in" style={{animationDelay: `${index * 0.1}s`}} data-testid={`feature-${index}`}>
+                <div className="mx-auto w-16 h-16 gradient-primary rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110 group-hover:rotate-3">
+                  <feature.icon className="h-8 w-8 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold text-foreground">{feature.title}</h3>
+                <h3 className="text-xl font-semibold text-foreground group-hover:text-primary transition-colors duration-300">{feature.title}</h3>
                 <p className="text-sm text-muted-foreground">{feature.description}</p>
               </div>
             ))}
@@ -175,12 +178,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="py-16 md:py-24">
-        <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-20">
-          <div className="text-center mb-12">
-            <Badge className="mb-4" data-testid="badge-testimonials">SUCCESS STORIES</Badge>
-            <h2 className="text-3xl md:text-4xl font-heading font-semibold text-foreground mb-4" data-testid="text-testimonials-title">
-              What Our Students Say
+      <section className="py-16 md:py-24 relative">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-transparent"></div>
+        <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-20 relative z-10">
+          <div className="text-center mb-12 animate-slide-up">
+            <Badge className="mb-4 gradient-primary shadow-md" data-testid="badge-testimonials">SUCCESS STORIES</Badge>
+            <h2 className="text-3xl md:text-4xl font-heading font-semibold mb-4" data-testid="text-testimonials-title">
+              What Our <span className="gradient-text">Students Say</span>
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Join thousands of professionals who have transformed their careers with our guidance.

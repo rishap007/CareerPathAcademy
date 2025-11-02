@@ -17,12 +17,15 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/50 shadow-sm">
       <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-20">
         <div className="flex items-center justify-between h-20">
-          <Link href="/" className="flex items-center space-x-2">
+          <Link href="/" className="flex items-center space-x-2 group">
+            <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+              <span className="text-white font-bold text-xl">C</span>
+            </div>
             <h1 className="text-2xl font-heading font-bold text-foreground" data-testid="logo-text">
-              CareerPath Academy
+              CareerPath <span className="gradient-text">Academy</span>
             </h1>
           </Link>
 
@@ -48,14 +51,15 @@ export default function Navbar() {
               variant="ghost"
               size="icon"
               onClick={toggleTheme}
+              className="hover:scale-110 transition-transform duration-300"
               data-testid="button-theme-toggle"
             >
               {theme === "light" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
             </Button>
-            <Button variant="ghost" data-testid="button-sign-in">
+            <Button variant="ghost" className="hover:scale-105 transition-transform duration-300" data-testid="button-sign-in">
               Sign In
             </Button>
-            <Button data-testid="button-get-started">
+            <Button className="gradient-primary shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105" data-testid="button-get-started">
               Get Started
             </Button>
           </div>

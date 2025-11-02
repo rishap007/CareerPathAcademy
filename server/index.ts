@@ -1,4 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
+import session from "express-session";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
@@ -15,6 +16,19 @@ app.use(express.json({
   }
 }));
 app.use(express.urlencoded({ extended: false }));
+
+// Session middleware (required for Passport)
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "your-secret-key-change-this-in-production",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+    },
+  })
+);
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -71,11 +85,9 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || '5000', 10);
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
+  const host = process.platform === 'win32' ? '127.0.0.1' : '0.0.0.0';
+
+  server.listen(port, host, () => {
+    log(`serving on http://${host}:${port}`);
   });
 })();

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Star, Users, Clock } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Link } from "wouter";
 
 export interface CourseCardProps {
   id: string;
@@ -31,17 +32,21 @@ export default function CourseCard({
   slug,
 }: CourseCardProps) {
   return (
-    <Card className="group overflow-hidden hover-elevate transition-all duration-300 border border-card-border" data-testid={`card-course-${slug}`}>
+    <Card className="group overflow-hidden hover-elevate transition-all duration-500 border border-card-border hover:shadow-2xl hover:border-primary/50 animate-scale-in" data-testid={`card-course-${slug}`}>
       <div className="relative aspect-video overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"></div>
         <img
           src={thumbnail}
           alt={title}
-          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           data-testid={`img-course-${slug}`}
         />
-        <Badge className="absolute top-4 left-4" data-testid={`badge-category-${slug}`}>
+        <Badge className="absolute top-4 left-4 z-20 backdrop-blur-sm bg-background/90 shadow-lg" data-testid={`badge-category-${slug}`}>
           {category}
         </Badge>
+        <div className="absolute top-4 right-4 z-20 bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-semibold shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          View Course
+        </div>
       </div>
       <div className="p-6 space-y-4">
         <div className="flex items-center gap-3 -mt-10 relative">
@@ -74,13 +79,15 @@ export default function CourseCard({
         </div>
         <div className="flex items-center justify-between pt-2">
           <div>
-            <span className="text-2xl font-bold text-foreground" data-testid={`text-price-${slug}`}>
+            <span className="text-2xl font-bold gradient-text" data-testid={`text-price-${slug}`}>
               ${price}
             </span>
           </div>
-          <Button data-testid={`button-enroll-${slug}`}>
-            Enroll Now
-          </Button>
+          <Link href={`/courses/${slug}`}>
+            <Button className="gradient-primary shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105" data-testid={`button-enroll-${slug}`}>
+              Enroll Now
+            </Button>
+          </Link>
         </div>
       </div>
     </Card>
