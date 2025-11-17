@@ -34,13 +34,32 @@ export const lessons = sqliteTable("lessons", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   courseId: text("course_id").notNull().references(() => courses.id, { onDelete: 'cascade' }),
   title: text("title").notNull(),
-  videoUrl: text("video_url").notNull(),
+  videoUrl: text("video_url"),
   orderIndex: integer("order_index").notNull(),
   duration: text("duration").notNull(),
-  type: text("type").notNull().default("video"),
+  type: text("type").notNull().default("video"), // video, exercise, live, project
+  description: text("description"),
   createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
 }, (table) => ({
   courseIdx: index("lessons_course_idx").on(table.courseId),
+}));
+
+export const liveLectures = sqliteTable("live_lectures", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  courseId: text("course_id").notNull().references(() => courses.id, { onDelete: 'cascade' }),
+  title: text("title").notNull(),
+  description: text("description"),
+  scheduledAt: integer("scheduled_at", { mode: "timestamp" }).notNull(),
+  duration: integer("duration").notNull(), // duration in minutes
+  meetingUrl: text("meeting_url"),
+  status: text("status").notNull().default("scheduled"), // scheduled, live, completed, cancelled
+  recordingUrl: text("recording_url"), // URL to recorded version after live lecture ends
+  instructorId: text("instructor_id").notNull().references(() => users.id),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+}, (table) => ({
+  courseIdx: index("live_lectures_course_idx").on(table.courseId),
+  statusIdx: index("live_lectures_status_idx").on(table.status),
+  scheduledAtIdx: index("live_lectures_scheduled_at_idx").on(table.scheduledAt),
 }));
 
 export const enrollments = sqliteTable("enrollments", {
@@ -80,6 +99,7 @@ export const coursesRelations = relations(courses, ({ one, many }) => ({
   }),
   lessons: many(lessons),
   enrollments: many(enrollments),
+  liveLectures: many(liveLectures),
 }));
 
 export const lessonsRelations = relations(lessons, ({ one, many }) => ({
@@ -88,6 +108,17 @@ export const lessonsRelations = relations(lessons, ({ one, many }) => ({
     references: [courses.id],
   }),
   progress: many(progress),
+}));
+
+export const liveLecturesRelations = relations(liveLectures, ({ one }) => ({
+  course: one(courses, {
+    fields: [liveLectures.courseId],
+    references: [courses.id],
+  }),
+  instructor: one(users, {
+    fields: [liveLectures.instructorId],
+    references: [users.id],
+  }),
 }));
 
 export const enrollmentsRelations = relations(enrollments, ({ one }) => ({
@@ -138,6 +169,11 @@ export const insertProgressSchema = createInsertSchema(progress).omit({
   id: true,
 });
 
+export const insertLiveLectureSchema = createInsertSchema(liveLectures).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 
@@ -152,3 +188,6 @@ export type InsertEnrollment = z.infer<typeof insertEnrollmentSchema>;
 
 export type Progress = typeof progress.$inferSelect;
 export type InsertProgress = z.infer<typeof insertProgressSchema>;
+
+export type LiveLecture = typeof liveLectures.$inferSelect;
+export type InsertLiveLecture = z.infer<typeof insertLiveLectureSchema>;

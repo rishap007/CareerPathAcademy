@@ -4,6 +4,7 @@ import {
   lessons,
   enrollments,
   progress,
+  liveLectures,
   type User,
   type InsertUser,
   type Course,
@@ -14,9 +15,11 @@ import {
   type InsertEnrollment,
   type Progress,
   type InsertProgress,
+  type LiveLecture,
+  type InsertLiveLecture,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, gte } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -42,6 +45,14 @@ export interface IStorage {
   getProgressByUserAndLesson(userId: string, lessonId: string): Promise<Progress | undefined>;
   getProgressByUserAndCourse(userId: string, courseId: string): Promise<Progress[]>;
   createOrUpdateProgress(progress: InsertProgress): Promise<Progress>;
+
+  // Live Lectures
+  createLiveLecture(lecture: InsertLiveLecture): Promise<LiveLecture>;
+  getLiveLecturesByCourseId(courseId: string): Promise<LiveLecture[]>;
+  getUpcomingLiveLectures(): Promise<LiveLecture[]>;
+  getLiveLectureById(id: string): Promise<LiveLecture | undefined>;
+  updateLiveLecture(id: string, lecture: Partial<InsertLiveLecture>): Promise<LiveLecture | undefined>;
+  deleteLiveLecture(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -189,6 +200,58 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return newProgress;
+  }
+
+  // Live Lecture Methods
+  async createLiveLecture(insertLecture: InsertLiveLecture): Promise<LiveLecture> {
+    const [lecture] = await db
+      .insert(liveLectures)
+      .values(insertLecture)
+      .returning();
+    return lecture;
+  }
+
+  async getLiveLecturesByCourseId(courseId: string): Promise<LiveLecture[]> {
+    return await db
+      .select()
+      .from(liveLectures)
+      .where(eq(liveLectures.courseId, courseId))
+      .orderBy(liveLectures.scheduledAt);
+  }
+
+  async getUpcomingLiveLectures(): Promise<LiveLecture[]> {
+    const now = new Date();
+    return await db
+      .select()
+      .from(liveLectures)
+      .where(
+        and(
+          gte(liveLectures.scheduledAt, now),
+          eq(liveLectures.status, "scheduled")
+        )
+      )
+      .orderBy(liveLectures.scheduledAt);
+  }
+
+  async getLiveLectureById(id: string): Promise<LiveLecture | undefined> {
+    const [lecture] = await db
+      .select()
+      .from(liveLectures)
+      .where(eq(liveLectures.id, id));
+    return lecture || undefined;
+  }
+
+  async updateLiveLecture(id: string, updateData: Partial<InsertLiveLecture>): Promise<LiveLecture | undefined> {
+    const [lecture] = await db
+      .update(liveLectures)
+      .set(updateData)
+      .where(eq(liveLectures.id, id))
+      .returning();
+    return lecture || undefined;
+  }
+
+  async deleteLiveLecture(id: string): Promise<void> {
+    await db.delete(liveLectures).where(eq(liveLectures.id, id));
   }
 }
 

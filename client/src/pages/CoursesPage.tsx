@@ -1,194 +1,136 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CourseCard from "@/components/CourseCard";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, Filter } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 
-import careerDevImage from '@assets/generated_images/Career_development_course_thumbnail_faf64b94.png';
-import leadershipImage from '@assets/generated_images/Leadership_training_course_thumbnail_b254d9be.png';
-import interviewImage from '@assets/generated_images/Interview_preparation_course_thumbnail_a10f56fe.png';
-import strategyImage from '@assets/generated_images/Business_strategy_course_thumbnail_86b9615a.png';
 import femaleMentorImage from '@assets/generated_images/Female_mentor_headshot_90fd7958.png';
-import maleMentorImage from '@assets/generated_images/Male_mentor_headshot_f02c4e64.png';
 
 export default function CoursesPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const [courses, setCourses] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const categories = ["All", "Career Growth", "Leadership", "Interview Prep", "Business Strategy"];
+  // Fetch courses
+  useEffect(() => {
+    const fetchCourses = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch("/api/courses?published=true");
+        if (response.ok) {
+          const data = await response.json();
+          setCourses(data.map((course: any) => ({
+            ...course,
+            instructor: "Expert Instructor",
+            instructorAvatar: femaleMentorImage,
+          })));
+        }
+      } catch (error) {
+        console.error("Failed to fetch courses:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const allCourses = [
-    {
-      id: "1",
-      title: "Career Development Mastery",
-      instructor: "Sarah Johnson",
-      instructorAvatar: femaleMentorImage,
-      category: "Career Growth",
-      price: 199,
-      rating: 4.9,
-      enrollments: 1234,
-      duration: "8 weeks",
-      thumbnail: careerDevImage,
-      slug: "career-development-mastery",
-    },
-    {
-      id: "2",
-      title: "Leadership Excellence Program",
-      instructor: "Michael Chen",
-      instructorAvatar: maleMentorImage,
-      category: "Leadership",
-      price: 249,
-      rating: 4.8,
-      enrollments: 987,
-      duration: "10 weeks",
-      thumbnail: leadershipImage,
-      slug: "leadership-excellence",
-    },
-    {
-      id: "3",
-      title: "Interview Preparation Bootcamp",
-      instructor: "Sarah Johnson",
-      instructorAvatar: femaleMentorImage,
-      category: "Interview Prep",
-      price: 149,
-      rating: 5.0,
-      enrollments: 1567,
-      duration: "4 weeks",
-      thumbnail: interviewImage,
-      slug: "interview-prep-bootcamp",
-    },
-    {
-      id: "4",
-      title: "Strategic Business Planning",
-      instructor: "Michael Chen",
-      instructorAvatar: maleMentorImage,
-      category: "Business Strategy",
-      price: 299,
-      rating: 4.7,
-      enrollments: 756,
-      duration: "12 weeks",
-      thumbnail: strategyImage,
-      slug: "strategic-business-planning",
-    },
-    {
-      id: "5",
-      title: "Advanced Career Transitions",
-      instructor: "Sarah Johnson",
-      instructorAvatar: femaleMentorImage,
-      category: "Career Growth",
-      price: 179,
-      rating: 4.9,
-      enrollments: 1089,
-      duration: "6 weeks",
-      thumbnail: careerDevImage,
-      slug: "advanced-career-transitions",
-    },
-    {
-      id: "6",
-      title: "Executive Leadership Mastery",
-      instructor: "Michael Chen",
-      instructorAvatar: maleMentorImage,
-      category: "Leadership",
-      price: 349,
-      rating: 4.8,
-      enrollments: 567,
-      duration: "14 weeks",
-      thumbnail: leadershipImage,
-      slug: "executive-leadership-mastery",
-    },
-  ];
+    fetchCourses();
+  }, []);
 
-  const filteredCourses = allCourses.filter(course => {
+  const categories = ["All", ...Array.from(new Set(courses.map(c => c.category)))];
+
+  const filteredCourses = courses.filter(course => {
     const matchesCategory = selectedCategory === "All" || course.category === selectedCategory;
-    const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      course.instructor.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-b from-purple-50/30 to-white dark:from-purple-950/5 dark:to-background">
       <Navbar />
-      
-      <div className="pt-32 pb-16 bg-muted/30 border-b border-border">
-        <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-20">
-          <h1 className="text-4xl md:text-5xl font-heading font-bold text-foreground mb-4" data-testid="text-page-title">
+
+      {/* Header */}
+      <div className="pt-24 pb-8 bg-white dark:bg-background border-b border-border/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h1 className="text-3xl md:text-4xl font-heading font-bold text-foreground mb-3" data-testid="text-page-title">
             Explore Our Courses
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl">
+          <p className="text-base text-muted-foreground max-w-2xl">
             Discover expert-led courses designed to accelerate your career growth and professional development.
           </p>
         </div>
       </div>
 
-      <div className="py-12">
-        <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-20">
-          <div className="flex flex-col lg:flex-row gap-8">
-            <aside className="lg:w-64 space-y-6">
-              <div>
-                <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-4">
-                  Search Courses
-                </h3>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                  <Input
-                    placeholder="Search courses..."
-                    className="pl-10"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    data-testid="input-search-courses"
-                  />
-                </div>
-              </div>
+      {/* Search & Filter Bar */}
+      <div className="sticky top-16 z-40 bg-white/95 dark:bg-background/95 backdrop-blur-sm border-b border-border/50 py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            <div className="relative w-full sm:max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search courses..."
+                className="pl-10 border-border/50"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                data-testid="input-search-courses"
+              />
+            </div>
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 w-full sm:w-auto">
+              {categories.map((category) => (
+                <Badge
+                  key={category}
+                  variant={selectedCategory === category ? "default" : "outline"}
+                  className={`cursor-pointer whitespace-nowrap transition-all ${
+                    selectedCategory === category
+                      ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                      : "hover:bg-muted"
+                  }`}
+                  onClick={() => setSelectedCategory(category)}
+                  data-testid={`button-category-${category.toLowerCase().replace(/\s+/g, '-')}`}
+                >
+                  {category}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
 
-              <div>
-                <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-4">
-                  Categories
-                </h3>
-                <div className="space-y-2">
-                  {categories.map((category) => (
-                    <Button
-                      key={category}
-                      variant={selectedCategory === category ? "default" : "ghost"}
-                      className="w-full justify-start"
-                      onClick={() => setSelectedCategory(category)}
-                      data-testid={`button-category-${category.toLowerCase().replace(/\s+/g, '-')}`}
-                    >
-                      {category}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            </aside>
+      {/* Courses Grid */}
+      <div className="py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between mb-6">
+            <p className="text-sm text-muted-foreground font-medium" data-testid="text-results-count">
+              {filteredCourses.length} {filteredCourses.length === 1 ? 'course' : 'courses'} found
+            </p>
+          </div>
 
-            <main className="flex-1">
-              <div className="flex items-center justify-between mb-8">
-                <p className="text-sm text-muted-foreground" data-testid="text-results-count">
-                  Showing {filteredCourses.length} {filteredCourses.length === 1 ? 'course' : 'courses'}
-                </p>
-                <Button variant="outline" size="sm" data-testid="button-filter">
-                  <Filter className="h-4 w-4 mr-2" />
-                  Filter
-                </Button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredCourses.map((course) => (
                   <CourseCard key={course.id} {...course} />
                 ))}
               </div>
 
-              {filteredCourses.length === 0 && (
-                <div className="text-center py-16">
-                  <p className="text-lg text-muted-foreground" data-testid="text-no-results">
-                    No courses found matching your criteria.
+              {filteredCourses.length === 0 && !isLoading && (
+                <div className="text-center py-20">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
+                    <Search className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <p className="text-lg font-medium text-foreground mb-2">No courses found</p>
+                  <p className="text-sm text-muted-foreground" data-testid="text-no-results">
+                    Try adjusting your search or filter criteria
                   </p>
                 </div>
               )}
-            </main>
-          </div>
+            </>
+          )}
         </div>
       </div>
 

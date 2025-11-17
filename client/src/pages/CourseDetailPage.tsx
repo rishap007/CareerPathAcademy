@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -11,70 +11,167 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Star, Users, Clock, CheckCircle, PlayCircle, Award, Infinity } from "lucide-react";
+import { Star, Users, Clock, CheckCircle, PlayCircle, Award, Infinity, Radio, Loader2 } from "lucide-react";
+import LiveLectureCard from "@/components/LiveLectureCard";
+import AuthModal from "@/components/AuthModal";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { useLocation, useRoute } from "wouter";
 
-import courseImage from '@assets/generated_images/Career_development_course_thumbnail_faf64b94.png';
 import instructorImage from '@assets/generated_images/Female_mentor_headshot_90fd7958.png';
 
 export default function CourseDetailPage() {
-  const course = {
-    title: "Career Development Mastery",
-    instructor: "Sarah Johnson",
-    instructorAvatar: instructorImage,
-    category: "Career Growth",
-    price: 199,
-    rating: 4.9,
-    enrollments: 1234,
-    duration: "8 weeks",
-    thumbnail: courseImage,
-    description: "Transform your career with this comprehensive program designed to help you navigate career transitions, develop essential skills, and achieve your professional goals. Learn proven strategies used by successful professionals to accelerate career growth.",
-    learningOutcomes: [
-      "Develop a clear career roadmap aligned with your goals",
-      "Master effective networking and personal branding strategies",
-      "Build confidence for career transitions and negotiations",
-      "Create a compelling professional narrative",
-      "Leverage industry insights for strategic career moves",
-    ],
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [, setLocation] = useLocation();
+  const [, params] = useRoute("/courses/:slug");
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [isEnrolling, setIsEnrolling] = useState(false);
+  const [isEnrolled, setIsEnrolled] = useState(false);
+  const [course, setCourse] = useState<any>(null);
+  const [lessons, setLessons] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  // Fetch course data
+  useEffect(() => {
+    const fetchCourse = async () => {
+      if (!params?.slug) return;
+
+      setIsLoading(true);
+      try {
+        const response = await fetch(`/api/courses/${params.slug}`);
+        if (response.ok) {
+          const data = await response.json();
+          setCourse(data);
+          setLessons(data.lessons || []);
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not load course details",
+          });
+        }
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to fetch course",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCourse();
+  }, [params?.slug]);
+
+  // Check if user is enrolled
+  useEffect(() => {
+    const checkEnrollment = async () => {
+      if (!user || !course) return;
+
+      try {
+        const response = await fetch("/api/enrollments/my", {
+          credentials: "include",
+        });
+        if (response.ok) {
+          const enrollments = await response.json();
+          const enrolled = enrollments.some((e: any) => e.courseId === course.id);
+          setIsEnrolled(enrolled);
+        }
+      } catch (error) {
+        console.error("Failed to check enrollment:", error);
+      }
+    };
+
+    checkEnrollment();
+  }, [user, course]);
+
+  const handleEnroll = async () => {
+    if (!user) {
+      setAuthModalOpen(true);
+      return;
+    }
+
+    setIsEnrolling(true);
+
+    try {
+      const response = await fetch("/api/enrollments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ courseId: course.id }),
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        setIsEnrolled(true);
+        toast({
+          title: "Success!",
+          description: "You have successfully enrolled in this course!",
+        });
+        setTimeout(() => {
+          setLocation("/dashboard");
+        }, 1500);
+      } else {
+        const error = await response.json();
+        if (error.message.includes("Already enrolled")) {
+          setIsEnrolled(true);
+          toast({
+            title: "Already Enrolled",
+            description: "You are already enrolled in this course.",
+          });
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Enrollment Failed",
+            description: error.message || "Could not enroll in course",
+          });
+        }
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+      });
+    } finally {
+      setIsEnrolling(false);
+    }
   };
 
-  const syllabus = [
-    {
-      title: "Week 1-2: Career Assessment & Goal Setting",
-      lessons: [
-        { title: "Understanding Your Career Values", duration: "45 min", type: "video" },
-        { title: "SWOT Analysis for Career Planning", duration: "30 min", type: "video" },
-        { title: "Setting SMART Career Goals", duration: "1 hr", type: "video" },
-        { title: "Creating Your Career Vision Board", duration: "20 min", type: "exercise" },
-      ],
-    },
-    {
-      title: "Week 3-4: Personal Branding & Networking",
-      lessons: [
-        { title: "Building Your Professional Brand", duration: "50 min", type: "video" },
-        { title: "LinkedIn Optimization Masterclass", duration: "40 min", type: "video" },
-        { title: "Networking Strategies That Work", duration: "55 min", type: "video" },
-        { title: "Crafting Your Elevator Pitch", duration: "25 min", type: "exercise" },
-      ],
-    },
-    {
-      title: "Week 5-6: Career Transitions & Negotiations",
-      lessons: [
-        { title: "Navigating Career Transitions", duration: "1 hr", type: "video" },
-        { title: "Salary Negotiation Tactics", duration: "45 min", type: "video" },
-        { title: "Interview Best Practices", duration: "50 min", type: "video" },
-        { title: "Mock Interview Session", duration: "1 hr", type: "live" },
-      ],
-    },
-    {
-      title: "Week 7-8: Sustaining Career Growth",
-      lessons: [
-        { title: "Building a Learning Habit", duration: "35 min", type: "video" },
-        { title: "Mentorship & Sponsorship", duration: "40 min", type: "video" },
-        { title: "Measuring Career Progress", duration: "30 min", type: "video" },
-        { title: "Final Project: Your Career Action Plan", duration: "2 hrs", type: "project" },
-      ],
-    },
-  ];
+  // Mock live lectures - can be replaced with API call later
+  const liveLectures: any[] = [];
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="flex items-center justify-center h-screen">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!course) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="flex flex-col items-center justify-center h-screen">
+          <h1 className="text-2xl font-bold mb-4">Course Not Found</h1>
+          <Button onClick={() => setLocation("/courses")}>Browse Courses</Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Group lessons by sections (every 4 lessons)
+  const syllabus = [];
+  for (let i = 0; i < lessons.length; i += 4) {
+    syllabus.push({
+      title: `Module ${Math.floor(i / 4) + 1}`,
+      lessons: lessons.slice(i, i + 4),
+    });
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -98,10 +195,10 @@ export default function CourseDetailPage() {
             <div className="flex flex-wrap items-center gap-4 text-sm">
               <div className="flex items-center gap-2">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={course.instructorAvatar} alt={course.instructor} />
-                  <AvatarFallback>{course.instructor.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                  <AvatarImage src={instructorImage} />
+                  <AvatarFallback>IN</AvatarFallback>
                 </Avatar>
-                <span className="text-foreground font-medium" data-testid="text-instructor">{course.instructor}</span>
+                <span className="text-foreground font-medium" data-testid="text-instructor">Instructor</span>
               </div>
               <div className="flex items-center gap-1">
                 <Star className="h-4 w-4 fill-primary text-primary" />
@@ -133,19 +230,48 @@ export default function CourseDetailPage() {
                 </p>
               </section>
 
-              <section>
-                <h2 className="text-2xl font-heading font-semibold text-foreground mb-6" data-testid="text-outcomes-title">
-                  What You'll Learn
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {course.learningOutcomes.map((outcome, index) => (
-                    <div key={index} className="flex items-start gap-3" data-testid={`outcome-${index}`}>
+              {lessons.length > 0 && (
+                <section>
+                  <h2 className="text-2xl font-heading font-semibold text-foreground mb-6" data-testid="text-outcomes-title">
+                    What You'll Learn
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-start gap-3">
                       <CheckCircle className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                      <span className="text-foreground">{outcome}</span>
+                      <span className="text-foreground">{lessons.length} comprehensive video lessons</span>
                     </div>
-                  ))}
-                </div>
-              </section>
+                    <div className="flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                      <span className="text-foreground">Practical exercises and projects</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                      <span className="text-foreground">Lifetime access to course materials</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                      <span className="text-foreground">Certificate of completion</span>
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              {/* Live Lectures Section */}
+              {liveLectures.length > 0 && (
+                <section>
+                  <div className="flex items-center gap-2 mb-6">
+                    <Radio className="h-6 w-6 text-primary" />
+                    <h2 className="text-2xl font-heading font-semibold text-foreground">
+                      Upcoming Live Lectures
+                    </h2>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {liveLectures.map((lecture) => (
+                      <LiveLectureCard key={lecture.id} {...lecture} />
+                    ))}
+                  </div>
+                </section>
+              )}
 
               <section>
                 <h2 className="text-2xl font-heading font-semibold text-foreground mb-6" data-testid="text-syllabus-title">
@@ -184,16 +310,16 @@ export default function CourseDetailPage() {
                 </h2>
                 <div className="flex items-start gap-6">
                   <Avatar className="h-20 w-20">
-                    <AvatarImage src={course.instructorAvatar} alt={course.instructor} />
-                    <AvatarFallback>{course.instructor.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                    <AvatarImage src={instructorImage} />
+                    <AvatarFallback>IN</AvatarFallback>
                   </Avatar>
                   <div className="space-y-2">
                     <h3 className="text-xl font-semibold text-foreground" data-testid="text-instructor-name">
-                      {course.instructor}
+                      Expert Instructor
                     </h3>
-                    <p className="text-primary font-medium">Senior Career Coach & Tech Leader</p>
+                    <p className="text-primary font-medium">Professional Career Coach</p>
                     <p className="text-foreground leading-relaxed">
-                      With over 15 years of experience in technology leadership and career development, Sarah has helped thousands of professionals navigate career transitions and achieve their goals.
+                      With years of experience in professional development and career coaching, our instructor has helped thousands of professionals navigate career transitions and achieve their goals.
                     </p>
                   </div>
                 </div>
@@ -209,8 +335,23 @@ export default function CourseDetailPage() {
                   <p className="text-sm text-muted-foreground">One-time payment</p>
                 </div>
 
-                <Button className="w-full" size="lg" data-testid="button-enroll-now">
-                  Enroll Now
+                <Button
+                  className="w-full bg-primary hover:bg-primary/90"
+                  size="lg"
+                  onClick={handleEnroll}
+                  disabled={isEnrolling || isEnrolled}
+                  data-testid="button-enroll-now"
+                >
+                  {isEnrolling ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Enrolling...
+                    </>
+                  ) : isEnrolled ? (
+                    "Enrolled ✓"
+                  ) : (
+                    "Enroll Now"
+                  )}
                 </Button>
 
                 <div className="space-y-4 pt-4 border-t border-border">
@@ -245,6 +386,13 @@ export default function CourseDetailPage() {
           </div>
         </div>
       </div>
+
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        defaultTab="register"
+        onSuccess={handleEnroll}
+      />
 
       <Footer />
     </div>

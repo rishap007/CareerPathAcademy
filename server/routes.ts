@@ -280,6 +280,163 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Live Lectures Routes
+  app.post("/api/live-lectures", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const user = req.user as User;
+      if (user.role !== "admin" && user.role !== "instructor") {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+
+      const lectureData = {
+        ...req.body,
+        instructorId: user.id,
+        scheduledAt: new Date(req.body.scheduledAt),
+      };
+
+      const lecture = await storage.createLiveLecture(lectureData);
+      res.json(lecture);
+    } catch (error) {
+      res.status(500).json({ message: "Error creating live lecture" });
+    }
+  });
+
+  app.get("/api/live-lectures/upcoming", async (req, res) => {
+    try {
+      const lectures = await storage.getUpcomingLiveLectures();
+      res.json(lectures);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching upcoming lectures" });
+    }
+  });
+
+  app.get("/api/live-lectures/course/:courseId", async (req, res) => {
+    try {
+      const lectures = await storage.getLiveLecturesByCourseId(req.params.courseId);
+      res.json(lectures);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching course lectures" });
+    }
+  });
+
+  app.get("/api/live-lectures/:id", async (req, res) => {
+    try {
+      const lecture = await storage.getLiveLectureById(req.params.id);
+      if (!lecture) {
+        return res.status(404).json({ message: "Live lecture not found" });
+      }
+      res.json(lecture);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching live lecture" });
+    }
+  });
+
+  app.put("/api/live-lectures/:id", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const user = req.user as User;
+      if (user.role !== "admin" && user.role !== "instructor") {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+
+      const updateData = {
+        ...req.body,
+        ...(req.body.scheduledAt && { scheduledAt: new Date(req.body.scheduledAt) }),
+      };
+
+      const lecture = await storage.updateLiveLecture(req.params.id, updateData);
+      if (!lecture) {
+        return res.status(404).json({ message: "Live lecture not found" });
+      }
+      res.json(lecture);
+    } catch (error) {
+      res.status(500).json({ message: "Error updating live lecture" });
+    }
+  });
+
+  app.delete("/api/live-lectures/:id", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const user = req.user as User;
+      if (user.role !== "admin" && user.role !== "instructor") {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+
+      await storage.deleteLiveLecture(req.params.id);
+      res.json({ message: "Live lecture deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Error deleting live lecture" });
+    }
+  });
+
+  // Lesson Upload/Create Route (for recorded lectures)
+  app.post("/api/lessons", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const user = req.user as User;
+      if (user.role !== "admin" && user.role !== "instructor") {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+
+      const lesson = await storage.createLesson(req.body);
+      res.json(lesson);
+    } catch (error) {
+      res.status(500).json({ message: "Error creating lesson" });
+    }
+  });
+
+  app.put("/api/lessons/:id", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const user = req.user as User;
+      if (user.role !== "admin" && user.role !== "instructor") {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+
+      const lesson = await storage.updateLesson(req.params.id, req.body);
+      if (!lesson) {
+        return res.status(404).json({ message: "Lesson not found" });
+      }
+      res.json(lesson);
+    } catch (error) {
+      res.status(500).json({ message: "Error updating lesson" });
+    }
+  });
+
+  app.delete("/api/lessons/:id", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const user = req.user as User;
+      if (user.role !== "admin" && user.role !== "instructor") {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+
+      await storage.deleteLesson(req.params.id);
+      res.json({ message: "Lesson deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Error deleting lesson" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

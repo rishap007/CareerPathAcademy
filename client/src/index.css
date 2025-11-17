@@ -1,10 +1,10 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
-
-/* LIGHT MODE - Professional Gradient Theme */
+/* LIGHT MODE - Clean & Elegant Theme (Inspired by PhysicsWallah) */
 :root {
   --button-outline: rgba(0,0,0, .10);
   --badge-outline: rgba(0,0,0, .05);
@@ -25,49 +25,58 @@
   --sidebar: 220 14% 96%;
   --sidebar-foreground: 222 47% 11%;
   --sidebar-border: 220 13% 89%;
-  --sidebar-primary: 237 92% 62%;
+  --sidebar-primary: 251 91% 59%;
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 220 13% 91%;
   --sidebar-accent-foreground: 222 47% 11%;
-  --sidebar-ring: 237 92% 62%;
+  --sidebar-ring: 251 91% 59%;
 
   --popover: 0 0% 100%;
   --popover-foreground: 222 47% 11%;
   --popover-border: 220 13% 91%;
 
-  --primary: 237 92% 62%;
+  /* Purple primary color (#5a4bda) */
+  --primary: 251 91% 59%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 280 80% 65%;
+  /* Green secondary for CTAs */
+  --secondary: 142 71% 45%;
   --secondary-foreground: 0 0% 100%;
 
   --muted: 220 14% 96%;
   --muted-foreground: 220 9% 46%;
 
-  --accent: 189 94% 43%;
+  /* Orange accent for highlights */
+  --accent: 24 95% 53%;
   --accent-foreground: 0 0% 100%;
 
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
 
   --input: 220 13% 85%;
-  --ring: 237 92% 62%;
+  --ring: 251 91% 59%;
 
-  --chart-1: 237 92% 62%;
-  --chart-2: 280 80% 65%;
-  --chart-3: 189 94% 43%;
-  --chart-4: 142 71% 45%;
-  --chart-5: 24 95% 53%;
+  --chart-1: 251 91% 59%;
+  --chart-2: 142 71% 45%;
+  --chart-3: 24 95% 53%;
+  --chart-4: 189 94% 43%;
+  --chart-5: 280 80% 65%;
 
-  /* Gradient colors */
-  --gradient-from: 237 92% 62%;
-  --gradient-via: 280 80% 65%;
-  --gradient-to: 189 94% 43%;
+  /* Pastel gradient colors */
+  --gradient-from: 251 91% 59%;
+  --gradient-via: 280 70% 85%;
+  --gradient-to: 251 100% 95%;
+
+  /* Pastel backgrounds */
+  --bg-purple-light: 251 100% 97%;
+  --bg-orange-light: 24 100% 95%;
+  --bg-green-light: 142 76% 95%;
+  --bg-blue-light: 189 100% 96%;
 
   --font-sans: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-serif: Poppins, Inter, sans-serif;
   --font-mono: 'SF Mono', Monaco, 'Cascadia Code', monospace;
-  --font-heading: 'Playfair Display', Georgia, serif;
+  --font-heading: Poppins, Inter, sans-serif;
   --font-body: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
   --radius: .5rem;
@@ -124,44 +133,47 @@
   --sidebar: 222 47% 6%;
   --sidebar-foreground: 210 40% 98%;
   --sidebar-border: 217 33% 18%;
-  --sidebar-primary: 237 92% 68%;
+  --sidebar-primary: 251 91% 68%;
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 217 33% 17%;
   --sidebar-accent-foreground: 210 40% 98%;
-  --sidebar-ring: 237 92% 68%;
+  --sidebar-ring: 251 91% 68%;
 
   --popover: 222 47% 8%;
   --popover-foreground: 210 40% 98%;
   --popover-border: 217 33% 20%;
 
-  --primary: 237 92% 68%;
+  /* Purple primary color in dark mode */
+  --primary: 251 91% 68%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 280 80% 70%;
+  /* Green secondary */
+  --secondary: 142 71% 55%;
   --secondary-foreground: 0 0% 100%;
 
   --muted: 217 33% 15%;
   --muted-foreground: 217 19% 63%;
 
-  --accent: 189 94% 53%;
+  /* Orange accent */
+  --accent: 24 95% 63%;
   --accent-foreground: 0 0% 100%;
 
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
 
   --input: 217 33% 25%;
-  --ring: 237 92% 68%;
+  --ring: 251 91% 68%;
 
-  --chart-1: 237 92% 68%;
-  --chart-2: 280 80% 70%;
-  --chart-3: 189 94% 53%;
-  --chart-4: 142 71% 55%;
-  --chart-5: 24 95% 63%;
+  --chart-1: 251 91% 68%;
+  --chart-2: 142 71% 55%;
+  --chart-3: 24 95% 63%;
+  --chart-4: 189 94% 53%;
+  --chart-5: 280 80% 70%;
 
-  /* Gradient colors */
-  --gradient-from: 237 92% 68%;
-  --gradient-via: 280 80% 70%;
-  --gradient-to: 189 94% 53%;
+  /* Gradient colors for dark mode */
+  --gradient-from: 251 91% 68%;
+  --gradient-via: 280 70% 75%;
+  --gradient-to: 251 80% 45%;
 
   --shadow-2xs: 0px 1px 2px 0px hsl(0 0% 0% / 0.15);
   --shadow-xs: 0px 1px 3px 0px hsl(0 0% 0% / 0.20);
