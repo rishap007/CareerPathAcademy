@@ -5,6 +5,9 @@ import { hash, verify } from "@node-rs/argon2";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import type { User } from "@shared/schema";
+import { stripe, createCheckoutSession, constructWebhookEvent, isStripeConfigured } from "./stripe";
+import { sendEmail, getEnrollmentConfirmationEmail, getPasswordResetEmail, verifyEmailConfig } from "./email";
+import crypto from "crypto";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Configure Passport
@@ -112,6 +115,146 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Password Reset Routes
+  const resetTokens = new Map<string, { userId: string; expiresAt: Date }>();
+
+  app.post("/api/auth/forgot-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        // Don't reveal if user exists
+        return res.json({ message: "If an account exists, a reset link has been sent." });
+      }
+
+      // Generate reset token
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+      resetTokens.set(resetToken, { userId: user.id, expiresAt });
+
+      // Send reset email
+      const resetUrl = `${process.env.APP_URL || 'http://localhost:5000'}/reset-password?token=${resetToken}`;
+      const emailTemplate = getPasswordResetEmail({
+        userName: user.name,
+        resetUrl,
+        expiresIn: '1 hour',
+      });
+
+      await sendEmail({
+        ...emailTemplate,
+        to: user.email,
+      });
+
+      res.json({ message: "If an account exists, a reset link has been sent." });
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      res.status(500).json({ message: "Error processing request" });
+    }
+  });
+
+  app.post("/api/auth/reset-password", async (req, res) => {
+    try {
+      const { token, newPassword } = req.body;
+
+      const resetData = resetTokens.get(token);
+      if (!resetData || resetData.expiresAt < new Date()) {
+        resetTokens.delete(token);
+        return res.status(400).json({ message: "Invalid or expired reset token" });
+      }
+
+      // Hash new password
+      const hashedPassword = await hash(newPassword, {
+        memoryCost: 19456,
+        timeCost: 2,
+        outputLen: 32,
+        parallelism: 1,
+      });
+
+      // Update user password (you'll need to add this method to storage)
+      await storage.updateUserPassword(resetData.userId, hashedPassword);
+
+      // Delete used token
+      resetTokens.delete(token);
+
+      res.json({ message: "Password reset successful" });
+    } catch (error) {
+      console.error('Reset password error:', error);
+      res.status(500).json({ message: "Error resetting password" });
+    }
+  });
+
+  // Stripe Webhook Handler
+  app.post("/api/webhooks/stripe", async (req, res) => {
+    try {
+      const signature = req.headers['stripe-signature'];
+
+      if (!signature) {
+        return res.status(400).json({ message: "Missing stripe-signature header" });
+      }
+
+      const event = constructWebhookEvent(req.body, signature as string);
+
+      if (!event) {
+        return res.status(400).json({ message: "Invalid signature" });
+      }
+
+      // Handle different event types
+      switch (event.type) {
+        case 'checkout.session.completed': {
+          const session = event.data.object as any;
+          const userId = session.metadata.userId;
+          const courseId = parseInt(session.metadata.courseId);
+
+          // Create enrollment
+          const enrollment = await storage.createEnrollment({
+            userId,
+            courseId,
+            stripePaymentId: session.payment_intent,
+          });
+
+          // Get user and course details
+          const user = await storage.getUser(userId);
+          const course = await storage.getCourseById(courseId);
+
+          if (user && course) {
+            // Send enrollment confirmation email
+            const emailTemplate = getEnrollmentConfirmationEmail({
+              userName: user.name,
+              courseTitle: course.title,
+              courseUrl: `${process.env.APP_URL || 'http://localhost:5000'}/courses/${course.slug}`,
+              isPaid: true,
+              amount: course.priceInCents,
+            });
+
+            await sendEmail({
+              ...emailTemplate,
+              to: user.email,
+            });
+          }
+
+          console.log(`✅ Enrollment created for user ${userId} in course ${courseId}`);
+          break;
+        }
+
+        case 'payment_intent.payment_failed': {
+          const paymentIntent = event.data.object as any;
+          console.error('❌ Payment failed:', paymentIntent.id);
+          break;
+        }
+
+        default:
+          console.log(`Unhandled event type: ${event.type}`);
+      }
+
+      res.json({ received: true });
+    } catch (error) {
+      console.error('Webhook error:', error);
+      res.status(500).json({ message: "Webhook processing failed" });
+    }
+  });
+
   // Courses Routes
   app.get("/api/courses", async (req, res) => {
     try {
@@ -192,13 +335,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Already enrolled in this course" });
       }
 
-      const enrollment = await storage.createEnrollment({
+      // Get course details
+      const course = await storage.getCourseById(courseId);
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+
+      // If course is free (price is 0), enroll directly
+      if (course.priceInCents === 0) {
+        const enrollment = await storage.createEnrollment({
+          userId: user.id,
+          courseId,
+        });
+
+        // Send enrollment confirmation email
+        const emailTemplate = getEnrollmentConfirmationEmail({
+          userName: user.name,
+          courseTitle: course.title,
+          courseUrl: `${process.env.APP_URL || 'http://localhost:5000'}/courses/${course.slug}`,
+          isPaid: false,
+        });
+        await sendEmail({
+          ...emailTemplate,
+          to: user.email,
+        });
+
+        return res.json(enrollment);
+      }
+
+      // For paid courses, create Stripe checkout session
+      if (!isStripeConfigured()) {
+        return res.status(503).json({
+          message: "Payment processing is not available. Please contact support."
+        });
+      }
+
+      const checkoutUrl = await createCheckoutSession({
+        courseId: course.id,
+        courseTitle: course.title,
+        priceInCents: course.priceInCents,
         userId: user.id,
-        courseId,
+        userEmail: user.email,
       });
 
-      res.json(enrollment);
+      if (!checkoutUrl) {
+        return res.status(500).json({ message: "Failed to create checkout session" });
+      }
+
+      res.json({ checkoutUrl });
     } catch (error) {
+      console.error('Enrollment error:', error);
       res.status(500).json({ message: "Error creating enrollment" });
     }
   });

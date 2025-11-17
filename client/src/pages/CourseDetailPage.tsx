@@ -86,6 +86,33 @@ export default function CourseDetailPage() {
     checkEnrollment();
   }, [user, course]);
 
+  // Handle payment redirect from Stripe
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get('payment');
+
+    if (paymentStatus === 'success') {
+      toast({
+        title: "Payment Successful!",
+        description: "Your enrollment is being processed. You will receive a confirmation email shortly.",
+      });
+      // Clear URL params
+      window.history.replaceState({}, '', window.location.pathname);
+      // Redirect to dashboard after a moment
+      setTimeout(() => {
+        setLocation("/dashboard");
+      }, 2000);
+    } else if (paymentStatus === 'cancelled') {
+      toast({
+        variant: "destructive",
+        title: "Payment Cancelled",
+        description: "Your payment was cancelled. You can try again.",
+      });
+      // Clear URL params
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
   const handleEnroll = async () => {
     if (!user) {
       setAuthModalOpen(true);
@@ -103,6 +130,16 @@ export default function CourseDetailPage() {
       });
 
       if (response.ok) {
+        const data = await response.json();
+
+        // Check if response contains a checkout URL (paid course)
+        if (data.checkoutUrl) {
+          // Redirect to Stripe checkout
+          window.location.href = data.checkoutUrl;
+          return;
+        }
+
+        // Free course - enrollment successful
         setIsEnrolled(true);
         toast({
           title: "Success!",

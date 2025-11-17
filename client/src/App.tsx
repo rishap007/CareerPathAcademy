@@ -11,6 +11,8 @@ import CourseDetailPage from "@/pages/CourseDetailPage";
 import DashboardPage from "@/pages/DashboardPage";
 import AdminPage from "@/pages/AdminPage";
 import InstructorPage from "@/pages/InstructorPage";
+import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
+import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -22,6 +24,8 @@ function Router() {
       <Route path="/dashboard" component={DashboardPage} />
       <Route path="/admin" component={AdminPage} />
       <Route path="/instructor" component={InstructorPage} />
+      <Route path="/forgot-password" component={ForgotPasswordPage} />
+      <Route path="/reset-password" component={ResetPasswordPage} />
       <Route component={NotFound} />
     </Switch>
   );
