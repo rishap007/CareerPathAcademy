@@ -82,5 +82,21 @@ sqliteDb.exec(`
   );
 `);
 
+// Create live_lectures table
+sqliteDb.exec(`
+  CREATE TABLE IF NOT EXISTS live_lectures (
+    id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+    course_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    scheduled_at INTEGER NOT NULL,
+    duration INTEGER NOT NULL,
+    meeting_url TEXT NOT NULL,
+    created_at INTEGER DEFAULT (unixepoch()),
+    updated_at INTEGER DEFAULT (unixepoch()),
+    FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
+  );
+`);
+
 console.log("✅ Database tables created successfully!");
 process.exit(0);
