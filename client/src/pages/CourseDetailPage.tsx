@@ -30,7 +30,9 @@ export default function CourseDetailPage() {
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [course, setCourse] = useState<any>(null);
   const [lessons, setLessons] = useState<any[]>([]);
+  const [liveLectures, setLiveLectures] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
   // Fetch course data
   useEffect(() => {
     const fetchCourse = async () => {
@@ -43,6 +45,15 @@ export default function CourseDetailPage() {
           const data = await response.json();
           setCourse(data);
           setLessons(data.lessons || []);
+
+          // Fetch live lectures for this course
+          if (data.id) {
+            const lecturesResponse = await fetch(`/api/live-lectures/course/${data.id}`);
+            if (lecturesResponse.ok) {
+              const lecturesData = await lecturesResponse.json();
+              setLiveLectures(lecturesData);
+            }
+          }
         } else {
           toast({
             variant: "destructive",
@@ -175,9 +186,6 @@ export default function CourseDetailPage() {
     }
   };
 
-  // Mock live lectures - can be replaced with API call later
-  const liveLectures: any[] = [];
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -243,7 +251,7 @@ export default function CourseDetailPage() {
               </div>
               <div className="flex items-center gap-1 text-muted-foreground">
                 <Users className="h-4 w-4" />
-                <span data-testid="text-enrollments">{course.enrollments} students</span>
+                <span data-testid="text-enrollments">{course.enrollmentCount || 0} students</span>
               </div>
               <div className="flex items-center gap-1 text-muted-foreground">
                 <Clock className="h-4 w-4" />
@@ -326,13 +334,24 @@ export default function CourseDetailPage() {
                       <AccordionContent>
                         <div className="space-y-3 pt-2">
                           {section.lessons.map((lesson, lessonIndex) => (
-                            <div key={lessonIndex} className="flex items-center justify-between py-2" data-testid={`lesson-${index}-${lessonIndex}`}>
+                            <button
+                              key={lessonIndex}
+                              onClick={() => {
+                                if (isEnrolled || !user) {
+                                  setLocation(`/courses/${course.slug}/lessons/${lesson.id}`);
+                                } else {
+                                  setAuthModalOpen(true);
+                                }
+                              }}
+                              className="w-full flex items-center justify-between py-2 px-3 rounded hover:bg-muted transition-colors"
+                              data-testid={`lesson-${index}-${lessonIndex}`}
+                            >
                               <div className="flex items-center gap-3">
                                 <PlayCircle className="h-5 w-5 text-muted-foreground" />
                                 <span className="text-foreground">{lesson.title}</span>
                               </div>
                               <span className="text-sm text-muted-foreground">{lesson.duration}</span>
-                            </div>
+                            </button>
                           ))}
                         </div>
                       </AccordionContent>
@@ -366,10 +385,21 @@ export default function CourseDetailPage() {
             <div className="lg:col-span-1">
               <Card className="p-6 space-y-6 sticky top-24">
                 <div>
-                  <p className="text-3xl font-bold text-foreground mb-2" data-testid="text-price">
-                    ${course.price}
-                  </p>
-                  <p className="text-sm text-muted-foreground">One-time payment</p>
+                  {course.price === 0 ? (
+                    <>
+                      <p className="text-3xl font-bold text-green-600 dark:text-green-500 mb-2" data-testid="text-price">
+                        Free
+                      </p>
+                      <p className="text-sm text-muted-foreground">Full access • No credit card required</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-3xl font-bold text-foreground mb-2" data-testid="text-price">
+                        ${course.price.toFixed(2)}
+                      </p>
+                      <p className="text-sm text-muted-foreground">One-time payment</p>
+                    </>
+                  )}
                 </div>
 
                 <Button

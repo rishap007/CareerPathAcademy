@@ -14,7 +14,7 @@ export const stripe = stripeSecretKey
   : null;
 
 export interface CheckoutSessionData {
-  courseId: number;
+  courseId: string;
   courseTitle: string;
   priceInCents: number;
   userId: string;
@@ -54,7 +54,7 @@ export async function createCheckoutSession(data: CheckoutSessionData): Promise<
       customer_email: userEmail,
       client_reference_id: userId,
       metadata: {
-        courseId: courseId.toString(),
+        courseId: courseId,
         userId: userId,
       },
     });

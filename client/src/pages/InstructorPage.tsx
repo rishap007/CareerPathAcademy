@@ -1,10 +1,11 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Video, Calendar, Upload } from "lucide-react";
+import { Plus, Video, Calendar, Upload, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,11 +17,17 @@ export default function InstructorPage() {
   const [isCreateLectureOpen, setIsCreateLectureOpen] = useState(false);
   const [isUploadVideoOpen, setIsUploadVideoOpen] = useState(false);
 
-  // Mock data - replace with actual API calls
-  const courses = [
-    { id: "1", title: "Career Development Mastery" },
-    { id: "2", title: "Leadership Excellence Program" },
-  ];
+  // Fetch instructor's courses
+  const { data: courses = [], isLoading: coursesLoading } = useQuery({
+    queryKey: ["/api/courses"],
+    queryFn: async () => {
+      const response = await fetch("/api/courses", {
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error("Failed to fetch courses");
+      return response.json();
+    },
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50/30 to-white dark:from-purple-950/5 dark:to-background">
@@ -129,12 +136,14 @@ export default function InstructorPage() {
 
 // Schedule Live Lecture Form Component
 function ScheduleLiveLectureForm({ courses, onClose }: { courses: any[], onClose: () => void }) {
+  const [selectedCourseId, setSelectedCourseId] = useState("");
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
 
     const data = {
-      courseId: formData.get("courseId"),
+      courseId: selectedCourseId,
       title: formData.get("title"),
       description: formData.get("description"),
       scheduledAt: new Date(formData.get("scheduledAt") as string).toISOString(),
@@ -146,6 +155,7 @@ function ScheduleLiveLectureForm({ courses, onClose }: { courses: any[], onClose
       const response = await fetch("/api/live-lectures", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(data),
       });
 
@@ -164,16 +174,22 @@ function ScheduleLiveLectureForm({ courses, onClose }: { courses: any[], onClose
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="courseId">Course</Label>
-        <Select name="courseId" required>
+        <Select value={selectedCourseId} onValueChange={setSelectedCourseId} required>
           <SelectTrigger>
             <SelectValue placeholder="Select a course" />
           </SelectTrigger>
           <SelectContent>
-            {courses.map((course) => (
-              <SelectItem key={course.id} value={course.id}>
-                {course.title}
-              </SelectItem>
-            ))}
+            {courses.length === 0 ? (
+              <div className="px-2 py-6 text-center text-sm text-muted-foreground">
+                No courses available
+              </div>
+            ) : (
+              courses.map((course: any) => (
+                <SelectItem key={course.id} value={course.id}>
+                  {course.title}
+                </SelectItem>
+              ))
+            )}
           </SelectContent>
         </Select>
       </div>
@@ -246,12 +262,14 @@ function ScheduleLiveLectureForm({ courses, onClose }: { courses: any[], onClose
 
 // Upload Video Form Component
 function UploadVideoForm({ courses, onClose }: { courses: any[], onClose: () => void }) {
+  const [selectedCourseId, setSelectedCourseId] = useState("");
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
 
     const data = {
-      courseId: formData.get("courseId"),
+      courseId: selectedCourseId,
       title: formData.get("title"),
       description: formData.get("description"),
       videoUrl: formData.get("videoUrl"),
@@ -264,6 +282,7 @@ function UploadVideoForm({ courses, onClose }: { courses: any[], onClose: () => 
       const response = await fetch("/api/lessons", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(data),
       });
 
@@ -282,16 +301,22 @@ function UploadVideoForm({ courses, onClose }: { courses: any[], onClose: () => 
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="courseId">Course</Label>
-        <Select name="courseId" required>
+        <Select value={selectedCourseId} onValueChange={setSelectedCourseId} required>
           <SelectTrigger>
             <SelectValue placeholder="Select a course" />
           </SelectTrigger>
           <SelectContent>
-            {courses.map((course) => (
-              <SelectItem key={course.id} value={course.id}>
-                {course.title}
-              </SelectItem>
-            ))}
+            {courses.length === 0 ? (
+              <div className="px-2 py-6 text-center text-sm text-muted-foreground">
+                No courses available
+              </div>
+            ) : (
+              courses.map((course: any) => (
+                <SelectItem key={course.id} value={course.id}>
+                  {course.title}
+                </SelectItem>
+              ))
+            )}
           </SelectContent>
         </Select>
       </div>

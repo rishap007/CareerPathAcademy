@@ -183,7 +183,7 @@ export default function DashboardPage() {
                             </div>
                             <div className="flex items-center justify-between pt-2">
                               <p className="text-sm text-muted-foreground">
-                                Enrolled {new Date(enrollment.enrolledAt).toLocaleDateString()}
+                                Enrolled {new Date(enrollment.purchasedAt).toLocaleDateString()}
                               </p>
                               <Button
                                 onClick={() => setLocation(`/courses/${enrollment.course?.slug}`)}
@@ -217,7 +217,7 @@ export default function DashboardPage() {
                               {enrollment.course?.title || "Course"}
                             </p>
                             <p className="text-xs text-muted-foreground mt-1">
-                              Enrolled {new Date(enrollment.enrolledAt).toLocaleDateString()}
+                              Enrolled {new Date(enrollment.purchasedAt).toLocaleDateString()}
                             </p>
                           </div>
                         </div>

@@ -24,6 +24,7 @@ export default function CoursesPage() {
           const data = await response.json();
           setCourses(data.map((course: any) => ({
             ...course,
+            enrollments: course.enrollmentCount || 0,
             instructor: "Expert Instructor",
             instructorAvatar: femaleMentorImage,
           })));

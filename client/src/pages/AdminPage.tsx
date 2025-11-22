@@ -1,68 +1,71 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { DollarSign, Users, BookOpen, TrendingUp, Plus, Edit, Trash2 } from "lucide-react";
+import { DollarSign, Users, BookOpen, TrendingUp, Plus, Edit, Trash2, Loader2 } from "lucide-react";
 
 export default function AdminPage() {
-  const [courses, setCourses] = useState([
-    {
-      id: 1,
-      title: "Career Development Mastery",
-      category: "Career Growth",
-      price: 199,
-      enrollments: 1234,
-      revenue: 245466,
-      published: true,
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const { data: allCourses = [], isLoading } = useQuery({
+    queryKey: ["/api/courses"],
+    queryFn: async () => {
+      const response = await fetch("/api/courses", {
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error("Failed to fetch courses");
+      return response.json();
     },
-    {
-      id: 2,
-      title: "Leadership Excellence Program",
-      category: "Leadership",
-      price: 249,
-      enrollments: 987,
-      revenue: 245763,
-      published: true,
-    },
-    {
-      id: 3,
-      title: "Interview Preparation Bootcamp",
-      category: "Interview Prep",
-      price: 149,
-      enrollments: 1567,
-      revenue: 233483,
-      published: true,
-    },
-  ]);
+  });
+
+  // Filter courses based on search query
+  const courses = allCourses.filter((course: any) =>
+    course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    course.category.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Calculate stats from courses data
+  const totalRevenue = courses.reduce((sum: number, course: any) => {
+    return sum + ((course.enrollmentCount || 0) * (course.priceInCents || 0));
+  }, 0) / 100;
+
+  const totalStudents = courses.reduce((sum: number, course: any) => {
+    return sum + (course.enrollmentCount || 0);
+  }, 0);
+
+  const avgRating = courses.length > 0
+    ? (courses.reduce((sum: number, course: any) => sum + (course.rating || 0), 0) / courses.length).toFixed(1)
+    : "0.0";
 
   const stats = [
     {
       label: "Total Revenue",
-      value: "$724,712",
+      value: `$${totalRevenue.toLocaleString()}`,
       icon: DollarSign,
       change: "+12.5%",
       changeType: "positive",
     },
     {
       label: "Total Students",
-      value: "3,788",
+      value: totalStudents.toLocaleString(),
       icon: Users,
       change: "+8.2%",
       changeType: "positive",
     },
     {
       label: "Active Courses",
-      value: "24",
+      value: courses.filter((c: any) => c.published).length.toString(),
       icon: BookOpen,
-      change: "+3",
+      change: `+${courses.filter((c: any) => c.published).length}`,
       changeType: "positive",
     },
     {
       label: "Avg. Rating",
-      value: "4.8",
+      value: avgRating,
       icon: TrendingUp,
       change: "+0.2",
       changeType: "positive",
@@ -118,11 +121,22 @@ export default function AdminPage() {
                 <Input
                   placeholder="Search courses..."
                   className="w-64"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   data-testid="input-search-courses"
                 />
               </div>
             </div>
 
+            {isLoading ? (
+              <div className="flex justify-center items-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : courses.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <p>No courses found</p>
+              </div>
+            ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -165,17 +179,17 @@ export default function AdminPage() {
                       </td>
                       <td className="py-4 px-4">
                         <span className="text-foreground" data-testid={`text-price-${course.id}`}>
-                          ${course.price}
+                          ${course.priceInCents === 0 ? 'Free' : (course.priceInCents / 100).toFixed(2)}
                         </span>
                       </td>
                       <td className="py-4 px-4">
                         <span className="text-foreground" data-testid={`text-enrollments-${course.id}`}>
-                          {course.enrollments}
+                          {course.enrollmentCount || 0}
                         </span>
                       </td>
                       <td className="py-4 px-4">
                         <span className="font-medium text-foreground" data-testid={`text-revenue-${course.id}`}>
-                          ${course.revenue.toLocaleString()}
+                          ${(((course.enrollmentCount || 0) * (course.priceInCents || 0)) / 100).toLocaleString()}
                         </span>
                       </td>
                       <td className="py-4 px-4">
@@ -198,6 +212,7 @@ export default function AdminPage() {
                 </tbody>
               </table>
             </div>
+            )}
           </Card>
         </div>
       </div>

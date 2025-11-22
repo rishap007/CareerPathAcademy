@@ -8,6 +8,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import HomePage from "@/pages/HomePage";
 import CoursesPage from "@/pages/CoursesPage";
 import CourseDetailPage from "@/pages/CourseDetailPage";
+import LessonPage from "@/pages/LessonPage";
 import DashboardPage from "@/pages/DashboardPage";
 import AdminPage from "@/pages/AdminPage";
 import InstructorPage from "@/pages/InstructorPage";
@@ -20,6 +21,7 @@ function Router() {
     <Switch>
       <Route path="/" component={HomePage} />
       <Route path="/courses" component={CoursesPage} />
+      <Route path="/courses/:courseSlug/lessons/:lessonId" component={LessonPage} />
       <Route path="/courses/:slug" component={CourseDetailPage} />
       <Route path="/dashboard" component={DashboardPage} />
       <Route path="/admin" component={AdminPage} />

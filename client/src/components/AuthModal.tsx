@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { Loader2 } from "lucide-react";
 
 interface AuthModalProps {
@@ -18,6 +19,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = "login", onSuc
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { checkAuth } = useAuth();
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -42,9 +44,9 @@ export default function AuthModal({ isOpen, onClose, defaultTab = "login", onSuc
           description: `Welcome back, ${data.user.name}!`,
         });
         onClose();
+        // Refresh auth state without full page reload
+        await checkAuth();
         onSuccess?.();
-        // Reload to update user state
-        window.location.reload();
       } else {
         const error = await response.json();
         toast({
@@ -99,9 +101,9 @@ export default function AuthModal({ isOpen, onClose, defaultTab = "login", onSuc
           description: `Welcome to CareerCompass, ${data.user.name}!`,
         });
         onClose();
+        // Refresh auth state without full page reload
+        await checkAuth();
         onSuccess?.();
-        // Reload to update user state
-        window.location.reload();
       } else {
         const error = await response.json();
         toast({

@@ -194,7 +194,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Missing stripe-signature header" });
       }
 
-      const event = constructWebhookEvent(req.body, signature as string);
+      const event = constructWebhookEvent(req.rawBody as Buffer, signature as string);
 
       if (!event) {
         return res.status(400).json({ message: "Invalid signature" });
@@ -205,7 +205,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         case 'checkout.session.completed': {
           const session = event.data.object as any;
           const userId = session.metadata.userId;
-          const courseId = parseInt(session.metadata.courseId);
+          const courseId = session.metadata.courseId;
 
           // Create enrollment
           const enrollment = await storage.createEnrollment({
@@ -219,6 +219,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const course = await storage.getCourseById(courseId);
 
           if (user && course) {
+            // Update enrollment count
+            await storage.updateCourse(courseId, {
+              enrollmentCount: (course.enrollmentCount || 0) + 1,
+            });
+
             // Send enrollment confirmation email
             const emailTemplate = getEnrollmentConfirmationEmail({
               userName: user.name,
@@ -348,6 +353,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           courseId,
         });
 
+        // Update enrollment count
+        await storage.updateCourse(courseId, {
+          enrollmentCount: (course.enrollmentCount || 0) + 1,
+        });
+
         // Send enrollment confirmation email
         const emailTemplate = getEnrollmentConfirmationEmail({
           userName: user.name,
@@ -453,6 +463,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const user = req.user as User;
       const { lessonId, completed } = req.body;
+
+      // Validate lesson exists
+      const lesson = await storage.getLessonById(lessonId);
+      if (!lesson) {
+        return res.status(404).json({ message: "Lesson not found" });
+      }
+
+      // Validate user is enrolled in the course
+      const enrollment = await storage.getEnrollment(user.id, lesson.courseId);
+      if (!enrollment) {
+        return res.status(403).json({ message: "Not enrolled in this course" });
+      }
 
       const progressRecord = await storage.createOrUpdateProgress({
         userId: user.id,

@@ -11,5 +11,8 @@ const __dirname = dirname(__filename);
 const dbPath = join(__dirname, '..', 'local.db');
 const sqlite = new Database(dbPath);
 
+// Enable foreign key constraints (disabled by default in SQLite)
+sqlite.pragma('foreign_keys = ON');
+
 export const db = drizzle(sqlite, { schema });
 export const sqliteDb = sqlite;

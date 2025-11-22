@@ -82,9 +82,15 @@ export default function CourseCard({
           {/* Price & CTA */}
           <div className="flex items-center justify-between pt-3 border-t border-border/50">
             <div>
-              <span className="text-2xl font-bold text-primary" data-testid={`text-price-${slug}`}>
-                ${price}
-              </span>
+              {price === 0 ? (
+                <span className="text-2xl font-bold text-green-600 dark:text-green-500" data-testid={`text-price-${slug}`}>
+                  Free
+                </span>
+              ) : (
+                <span className="text-2xl font-bold text-primary" data-testid={`text-price-${slug}`}>
+                  ${price.toFixed(2)}
+                </span>
+              )}
             </div>
             <Button
               size="sm"
