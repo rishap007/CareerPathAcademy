@@ -24,19 +24,19 @@ export default function HomePage() {
   const { user, isLoading: authLoading } = useAuth();
 
   // Fetch user's enrollments with progress
-  const { data: enrollments, isLoading: enrollmentsLoading } = useQuery({
+  const { data: enrollments = [], isLoading: enrollmentsLoading } = useQuery<any[]>({
     queryKey: ["/api/enrollments/my"],
     enabled: !!user,
   });
 
   // Fetch personalized recommendations
-  const { data: recommendations, isLoading: recommendationsLoading } = useQuery({
+  const { data: recommendations = [], isLoading: recommendationsLoading } = useQuery<any[]>({
     queryKey: ["/api/recommendations"],
     enabled: !!user,
   });
 
   // Fetch upcoming live lectures
-  const { data: upcomingLectures } = useQuery({
+  const { data: upcomingLectures = [] } = useQuery<any[]>({
     queryKey: ["/api/live-lectures/upcoming"],
     enabled: !!user,
   });

@@ -222,7 +222,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Update enrollment count
             await storage.updateCourse(courseId, {
               enrollmentCount: (course.enrollmentCount || 0) + 1,
-            });
+            } as any);
 
             // Send enrollment confirmation email
             const emailTemplate = getEnrollmentConfirmationEmail({
@@ -257,6 +257,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Webhook error:', error);
       res.status(500).json({ message: "Webhook processing failed" });
+    }
+  });
+
+  // Video Upload Route
+  app.post("/api/videos/upload", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const user = req.user as User;
+      if (user.role !== "admin" && user.role !== "instructor") {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+
+      // TODO: Implement actual video upload to your chosen service
+      // For now, this is a placeholder that returns mock data
+      //
+      // Example implementation with Cloudflare Stream:
+      // const formData = new FormData();
+      // formData.append('file', req.file);
+      // const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/stream`, {
+      //   method: 'POST',
+      //   headers: { 'Authorization': `Bearer ${apiToken}` },
+      //   body: formData
+      // });
+      // const data = await response.json();
+      // return res.json({ url: data.result.playback.hls, videoId: data.result.uid });
+
+      // Placeholder response
+      res.json({
+        success: true,
+        videoId: `video-${Date.now()}`,
+        url: "/uploads/placeholder-video.mp4",
+        message: "Video upload endpoint ready. Configure your video service to enable uploads.",
+      });
+    } catch (error) {
+      console.error('Video upload error:', error);
+      res.status(500).json({ message: "Error uploading video" });
     }
   });
 
@@ -312,16 +351,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Not authorized" });
       }
 
+      const { lessons, ...courseBody } = req.body;
+
       const courseData = {
-        ...req.body,
-        priceInCents: Math.round(req.body.price * 100),
-        rating: Math.round(req.body.rating * 10),
+        ...courseBody,
+        priceInCents: Math.round(courseBody.price * 100),
+        rating: courseBody.rating ? Math.round(courseBody.rating * 10) : 45,
         instructorId: user.id,
       };
 
       const course = await storage.createCourse(courseData);
+
+      // Create lessons if provided
+      if (lessons && Array.isArray(lessons)) {
+        for (const lesson of lessons) {
+          await storage.createLesson({
+            courseId: course.id,
+            title: lesson.title,
+            description: lesson.description || null,
+            videoUrl: lesson.videoUrl || null,
+            duration: lesson.duration || "0:00",
+            orderIndex: lesson.orderIndex,
+            type: lesson.type || "video",
+          });
+        }
+      }
+
       res.json(course);
     } catch (error) {
+      console.error('Error creating course:', error);
       res.status(500).json({ message: "Error creating course" });
     }
   });
@@ -358,7 +416,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Update enrollment count
         await storage.updateCourse(courseId, {
           enrollmentCount: (course.enrollmentCount || 0) + 1,
-        });
+        } as any);
 
         // Send enrollment confirmation email
         const emailTemplate = getEnrollmentConfirmationEmail({

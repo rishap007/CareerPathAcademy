@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import CourseBuilder from "@/components/CourseBuilder";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,8 @@ import { DollarSign, Users, BookOpen, TrendingUp, Plus, Edit, Trash2, Loader2 } 
 
 export default function AdminPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [courseBuilderOpen, setCourseBuilderOpen] = useState(false);
+  const [editingCourse, setEditingCourse] = useState<any>(null);
 
   const { data: allCourses = [], isLoading } = useQuery({
     queryKey: ["/api/courses"],
@@ -87,7 +90,14 @@ export default function AdminPage() {
                 Manage your courses and track performance metrics.
               </p>
             </div>
-            <Button size="lg" data-testid="button-create-course">
+            <Button
+              size="lg"
+              onClick={() => {
+                setEditingCourse(null);
+                setCourseBuilderOpen(true);
+              }}
+              data-testid="button-create-course"
+            >
               <Plus className="h-5 w-5 mr-2" />
               Create Course
             </Button>
@@ -165,7 +175,7 @@ export default function AdminPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {courses.map((course) => (
+                  {courses.map((course: any) => (
                     <tr key={course.id} className="border-b border-border hover:bg-muted/30" data-testid={`course-row-${course.id}`}>
                       <td className="py-4 px-4">
                         <p className="font-medium text-foreground" data-testid={`text-course-title-${course.id}`}>
@@ -199,7 +209,15 @@ export default function AdminPage() {
                       </td>
                       <td className="py-4 px-4">
                         <div className="flex items-center justify-end gap-2">
-                          <Button variant="ghost" size="icon" data-testid={`button-edit-${course.id}`}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setEditingCourse(course);
+                              setCourseBuilderOpen(true);
+                            }}
+                            data-testid={`button-edit-${course.id}`}
+                          >
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button variant="ghost" size="icon" data-testid={`button-delete-${course.id}`}>
@@ -218,6 +236,15 @@ export default function AdminPage() {
       </div>
 
       <Footer />
+
+      <CourseBuilder
+        isOpen={courseBuilderOpen}
+        onClose={() => {
+          setCourseBuilderOpen(false);
+          setEditingCourse(null);
+        }}
+        editCourse={editingCourse}
+      />
     </div>
   );
 }

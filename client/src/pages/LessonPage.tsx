@@ -144,7 +144,7 @@ export default function LessonPage() {
           <div className="mb-6">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Button
-                variant="link"
+                variant="ghost"
                 className="p-0 h-auto"
                 onClick={() => setLocation(`/courses/${params?.courseSlug}`)}
               >
