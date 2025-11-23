@@ -12,7 +12,7 @@ export interface CourseCardProps {
   category: string;
   price: number;
   rating: number;
-  enrollments: number;
+  enrollments?: number;
   duration: string;
   thumbnail: string;
   slug: string;
@@ -71,7 +71,7 @@ export default function CourseCard({
             </div>
             <div className="flex items-center gap-1">
               <Users className="h-4 w-4" />
-              <span data-testid={`text-enrollments-${slug}`}>{enrollments.toLocaleString()}</span>
+              <span data-testid={`text-enrollments-${slug}`}>{(enrollments || 0).toLocaleString()}</span>
             </div>
             <div className="flex items-center gap-1">
               <Clock className="h-4 w-4" />

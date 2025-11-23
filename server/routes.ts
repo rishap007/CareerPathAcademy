@@ -271,6 +271,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...course,
         price: course.priceInCents / 100,
         rating: course.rating / 10, // Convert rating from 0-50 to 0-5.0
+        enrollments: course.enrollmentCount || 0,
       }));
 
       res.json(coursesWithPrice);
@@ -292,6 +293,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...course,
         price: course.priceInCents / 100,
         rating: course.rating / 10,
+        enrollments: course.enrollmentCount || 0,
         lessons,
       });
     } catch (error) {
@@ -439,6 +441,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Course Recommendations
+  app.get("/api/recommendations", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const user = req.user as User;
+      const enrollments = await storage.getEnrollmentsByUserId(user.id);
+      const enrolledCourseIds = enrollments.map(e => e.courseId);
+
+      // Get all published courses
+      const allCourses = await storage.getCourses(true);
+
+      // Get enrolled courses with their categories
+      const enrolledCourses = await Promise.all(
+        enrolledCourseIds.map(id => storage.getCourseById(id))
+      );
+      const enrolledCategories = enrolledCourses
+        .filter(c => c !== undefined)
+        .map(c => c!.category);
+
+      // Recommend courses based on:
+      // 1. Similar categories to enrolled courses
+      // 2. High ratings
+      // 3. Not already enrolled
+      const recommendations = allCourses
+        .filter(course => !enrolledCourseIds.includes(course.id))
+        .map(course => ({
+          ...course,
+          relevanceScore: enrolledCategories.includes(course.category)
+            ? course.rating + 20  // Boost score for matching category
+            : course.rating,
+        }))
+        .sort((a, b) => b.relevanceScore - a.relevanceScore)
+        .slice(0, 6)
+        .map(course => ({
+          ...course,
+          price: course.priceInCents / 100,
+          rating: course.rating / 10,
+          enrollments: course.enrollmentCount || 0,
+        }));
+
+      res.json(recommendations);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching recommendations" });
+    }
+  });
+
   // Lessons Routes
   app.get("/api/courses/:slug/lessons", async (req, res) => {
     try {
@@ -518,6 +569,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const lectures = await storage.getUpcomingLiveLectures();
       res.json(lectures);
     } catch (error) {
+      console.error('Error fetching upcoming lectures:', error);
       res.status(500).json({ message: "Error fetching upcoming lectures" });
     }
   });

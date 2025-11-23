@@ -19,7 +19,7 @@ import {
   type InsertLiveLecture,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, gte } from "drizzle-orm";
+import { eq, desc, asc, and, gte } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -122,7 +122,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getLessonsByCourseId(courseId: string): Promise<Lesson[]> {
-    return await db.select().from(lessons).where(eq(lessons.courseId, courseId)).orderBy(lessons.orderIndex);
+    return await db.select().from(lessons).where(eq(lessons.courseId, courseId)).orderBy(asc(lessons.orderIndex));
   }
 
   async getLessonById(id: string): Promise<Lesson | undefined> {
@@ -230,7 +230,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(liveLectures)
       .where(eq(liveLectures.courseId, courseId))
-      .orderBy(liveLectures.scheduledAt);
+      .orderBy(asc(liveLectures.scheduledAt));
   }
 
   async getUpcomingLiveLectures(): Promise<LiveLecture[]> {
@@ -244,7 +244,7 @@ export class DatabaseStorage implements IStorage {
           eq(liveLectures.status, "scheduled")
         )
       )
-      .orderBy(liveLectures.scheduledAt);
+      .orderBy(asc(liveLectures.scheduledAt));
   }
 
   async getLiveLectureById(id: string): Promise<LiveLecture | undefined> {

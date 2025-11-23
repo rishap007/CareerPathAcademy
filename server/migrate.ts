@@ -46,6 +46,7 @@ sqliteDb.exec(`
     order_index INTEGER NOT NULL,
     duration TEXT,
     type TEXT DEFAULT 'video',
+    description TEXT,
     created_at INTEGER DEFAULT (unixepoch()),
     updated_at INTEGER DEFAULT (unixepoch()),
     FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
@@ -91,10 +92,14 @@ sqliteDb.exec(`
     description TEXT,
     scheduled_at INTEGER NOT NULL,
     duration INTEGER NOT NULL,
-    meeting_url TEXT NOT NULL,
+    meeting_url TEXT,
+    status TEXT NOT NULL DEFAULT 'scheduled',
+    recording_url TEXT,
+    instructor_id TEXT NOT NULL,
     created_at INTEGER DEFAULT (unixepoch()),
     updated_at INTEGER DEFAULT (unixepoch()),
-    FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
+    FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
+    FOREIGN KEY (instructor_id) REFERENCES users(id)
   );
 `);
 

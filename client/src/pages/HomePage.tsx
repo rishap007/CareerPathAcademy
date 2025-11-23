@@ -5,7 +5,13 @@ import TestimonialCard from "@/components/TestimonialCard";
 import MentorBio from "@/components/MentorBio";
 import Footer from "@/components/Footer";
 import { Badge } from "@/components/ui/badge";
-import { Target, Users, Award, TrendingUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Target, Users, Award, TrendingUp, BookOpen, Clock, Play } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 
 import careerDevImage from '@assets/generated_images/Career_development_course_thumbnail_faf64b94.png';
 import leadershipImage from '@assets/generated_images/Leadership_training_course_thumbnail_b254d9be.png';
@@ -15,6 +21,25 @@ import femaleMentorImage from '@assets/generated_images/Female_mentor_headshot_9
 import maleMentorImage from '@assets/generated_images/Male_mentor_headshot_f02c4e64.png';
 
 export default function HomePage() {
+  const { user, isLoading: authLoading } = useAuth();
+
+  // Fetch user's enrollments with progress
+  const { data: enrollments, isLoading: enrollmentsLoading } = useQuery({
+    queryKey: ["/api/enrollments/my"],
+    enabled: !!user,
+  });
+
+  // Fetch personalized recommendations
+  const { data: recommendations, isLoading: recommendationsLoading } = useQuery({
+    queryKey: ["/api/recommendations"],
+    enabled: !!user,
+  });
+
+  // Fetch upcoming live lectures
+  const { data: upcomingLectures } = useQuery({
+    queryKey: ["/api/live-lectures/upcoming"],
+    enabled: !!user,
+  });
   const featuredCourses = [
     {
       id: "1",
@@ -104,6 +129,187 @@ export default function HomePage() {
     },
   ];
 
+  // If user is logged in, show personalized dashboard
+  if (user) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+
+        {/* Personalized Welcome Section */}
+        <section className="pt-24 pb-16 bg-gradient-to-br from-primary/10 via-purple-50/50 to-accent/10 dark:from-primary/5 dark:via-purple-950/20 dark:to-accent/5">
+          <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-20">
+            <div className="animate-fade-in space-y-4">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold leading-tight">
+                Welcome back, <span className="gradient-text">{user.name}</span>!
+              </h1>
+              <p className="text-lg md:text-xl text-muted-foreground max-w-3xl">
+                Continue your learning journey and explore new courses tailored for you.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Continue Learning Section */}
+        {enrollments && enrollments.length > 0 && (
+          <section className="py-16 md:py-20">
+            <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-20">
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-heading font-semibold mb-2">
+                    Continue Learning
+                  </h2>
+                  <p className="text-muted-foreground">Pick up where you left off</p>
+                </div>
+                <Link href="/dashboard">
+                  <Button variant="outline">View All Courses</Button>
+                </Link>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {enrollments.slice(0, 3).map((enrollment: any) => (
+                  <Link key={enrollment.id} href={`/courses/${enrollment.course.slug}`}>
+                    <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                      <CardHeader>
+                        <img
+                          src={enrollment.course.thumbnail}
+                          alt={enrollment.course.title}
+                          className="w-full h-40 object-cover rounded-md mb-4"
+                        />
+                        <CardTitle className="text-lg line-clamp-2">
+                          {enrollment.course.title}
+                        </CardTitle>
+                        <CardDescription>{enrollment.course.category}</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Progress</span>
+                            <span className="font-semibold">{enrollment.progress}%</span>
+                          </div>
+                          <Progress value={enrollment.progress} className="h-2" />
+                          <p className="text-xs text-muted-foreground">
+                            {enrollment.completedLessons} of {enrollment.totalLessons} lessons completed
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Recommended Courses Section */}
+        {recommendations && recommendations.length > 0 && (
+          <section className="py-16 md:py-20 bg-muted/30">
+            <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-20">
+              <div className="mb-8">
+                <Badge className="mb-4 gradient-primary shadow-md">RECOMMENDED FOR YOU</Badge>
+                <h2 className="text-2xl md:text-3xl font-heading font-semibold mb-2">
+                  Courses You Might Like
+                </h2>
+                <p className="text-muted-foreground">
+                  Based on your interests and learning patterns
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {recommendations.slice(0, 6).map((course: any) => (
+                  <CourseCard key={course.id} {...course} />
+                ))}
+              </div>
+
+              <div className="text-center mt-8">
+                <Link href="/courses">
+                  <Button size="lg" className="gradient-primary">
+                    Explore All Courses
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Upcoming Live Lectures */}
+        {upcomingLectures && upcomingLectures.length > 0 && (
+          <section className="py-16 md:py-20">
+            <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-20">
+              <div className="mb-8">
+                <h2 className="text-2xl md:text-3xl font-heading font-semibold mb-2">
+                  Upcoming Live Lectures
+                </h2>
+                <p className="text-muted-foreground">
+                  Join live sessions with expert instructors
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {upcomingLectures.slice(0, 4).map((lecture: any) => (
+                  <Card key={lecture.id} className="hover:shadow-lg transition-shadow">
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <CardTitle className="text-lg mb-2">{lecture.title}</CardTitle>
+                          <CardDescription className="line-clamp-2">
+                            {lecture.description}
+                          </CardDescription>
+                        </div>
+                        <Badge variant="secondary" className="ml-2">
+                          <Play className="h-3 w-3 mr-1" />
+                          Live
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-4 w-4" />
+                          <span>
+                            {new Date(lecture.scheduledAt).toLocaleDateString()} at{" "}
+                            {new Date(lecture.scheduledAt).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Empty State for New Users */}
+        {(!enrollments || enrollments.length === 0) && (
+          <section className="py-16 md:py-20">
+            <div className="max-w-4xl mx-auto px-6 text-center">
+              <div className="mb-8">
+                <BookOpen className="h-20 w-20 mx-auto text-primary/50 mb-4" />
+                <h2 className="text-2xl md:text-3xl font-heading font-semibold mb-4">
+                  Start Your Learning Journey
+                </h2>
+                <p className="text-lg text-muted-foreground mb-8">
+                  You haven't enrolled in any courses yet. Explore our catalog and find the perfect course for you!
+                </p>
+                <Link href="/courses">
+                  <Button size="lg" className="gradient-primary">
+                    Browse Courses
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </section>
+        )}
+
+        <Footer />
+      </div>
+    );
+  }
+
+  // For logged-out users, show the original home page
   return (
     <div className="min-h-screen bg-background">
       <Navbar />

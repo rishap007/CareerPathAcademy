@@ -27,7 +27,7 @@ export default function Hero() {
   };
 
   return (
-    <section className="relative pt-20 pb-12 md:pt-24 md:pb-16 overflow-hidden bg-gradient-to-b from-purple-50/50 to-white dark:from-purple-950/10 dark:to-background">
+    <section className="relative pt-24 pb-12 md:pt-28 md:pb-16 overflow-hidden bg-gradient-to-b from-purple-50/50 to-white dark:from-purple-950/10 dark:to-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-16">
